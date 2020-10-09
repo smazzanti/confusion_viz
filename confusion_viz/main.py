@@ -147,7 +147,7 @@ class ConfusionViz:
             },
             'uplift': {
                 'opacity': 0, 
-                'name': 'uplift: ×{}'.format(round(self.stats['frac']['uplift'][i], 2))
+                'name': 'uplift: x{}'.format(round(self.stats['frac']['uplift'][i], 2))
             },
             'recall': {
                 'opacity': 0, 
