@@ -11,7 +11,7 @@ setup(
     packages=['confusion_viz'],
     install_requires=[
         'numpy>=1.18.1',
-        'sklearn>=0.22.2.post1',
+        'sklearn>=0.22.2',
         'plotly>=4.5.2'
     ],
     zip_safe=False
