@@ -1,1 +1,1 @@
-from confusion_viz import main
+from .main import ConfusionViz
