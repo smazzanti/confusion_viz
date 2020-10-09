@@ -1,1 +1,1 @@
-import main
+from confusion_viz import main
