@@ -27,10 +27,12 @@ class ConfusionViz:
         precision, recall, threshold = precision_recall_curve(self.y_true, self.probas_pred)
         precision = np.append(np.append(positives / sample, precision[:-1]), 0)
         recall = np.append(1, recall)
-        threshold = np.append(np.append(0, threshold), 1.1)
-        target_recall = np.append(np.append(1000, np.linspace(1 - 1 / max_frames, 1 / max_frames, max_frames - 2)), -1000)
-        select = find_closest(recall, target_recall)
-        precision, recall, threshold = [arr[select] for arr in [precision, recall, threshold]]
+        threshold = np.append(np.append(0, threshold), 1.01)
+        
+        if len(recall) > max_frames:
+            target_recall = np.append(np.append(999, np.linspace(1 - 1 / max_frames, 1 / max_frames, max_frames - 2)), -999)
+            select = find_closest(recall, target_recall)
+            precision, recall, threshold = [arr[select] for arr in [precision, recall, threshold]]
         
         predicted_positives = np.array([np.sum(self.probas_pred >= thres) for thres in threshold])
         true_positives = (precision * predicted_positives).astype(int)
@@ -74,30 +76,25 @@ class ConfusionViz:
         coords['false negatives'] = [1 - self.stats['frac']['positives'] ** .5, 1]
         coords['true positives'] = [coords['false negatives'][0], coords['false negatives'][0] + self.stats['frac']['true positives'][i] ** .5]
         coords['false positives'] = [coords['true positives'][1] - self.stats['frac']['predicted positives'][i] ** .5, coords['true positives'][1]]
-        coords['predicted positives'] = [.5] * 2
+        coords['predicted positives'] = [coords['false positives'][0], coords['true positives'][1]]
         coords['precision'] = [.5] * 2
         coords['uplift'] = [.5] * 2
         coords['recall'] = [.5] * 2
-
+        
+        if coords['false positives'][0] < 0:
+            max_l = (self.stats['frac']['false positives'][i] + coords['true positives'][0] ** 2) / 2 / coords['true positives'][0]
+            coords['false positives'] = [0, coords['true positives'][0], max_l]
+            coords['predicted positives'] = [0] + coords['true positives'] + [max_l]
+            
         return coords
     
     
     def _coord2Scatter(self, coord, **Scatter_kwargs):
         '''return a square given its coordinates'''
-        
-        coord_min = coord[0]
-        coord_max = coord[1]
-        
-        Scatter = go.Scatter(
-            x = [coord_min, coord_min, coord_max, coord_max, coord_min], 
-            y = [coord_min, coord_max, coord_max, coord_min, coord_min],
-            mode = 'lines',
-            fill = 'toself',
-            line_width = 0,
-            **Scatter_kwargs
-        )
-        
-        return Scatter
+            
+        x = [coord[i] for i in range(len(coord)) for _ in (0, 1)] + [coord[0]]
+        y = x[::-1]
+        return go.Scatter(x = x, y = y, mode = 'lines', **Scatter_kwargs)
     
     
     def _index2Scatters(self, i):
@@ -109,6 +106,8 @@ class ConfusionViz:
         Scatter_kwargs = {
             'true negatives': {
                 'fillcolor': 'blue',
+                'fill': 'toself',
+                'line_width': 0,
                 'name': 'true negatives: {} ({} of sample)'.format(
                     '{:,}'.format(self.stats['count']['true negatives'][i]), 
                     '{:.2%}'.format(self.stats['frac']['true negatives'][i])
@@ -116,6 +115,8 @@ class ConfusionViz:
             },
             'false negatives': {
                 'fillcolor': 'yellow',
+                'fill': 'toself',
+                'line_width': 0,
                 'name': 'false negatives: {} ({} of sample)'.format(
                     '{:,}'.format(self.stats['count']['false negatives'][i]), 
                     '{:.2%}'.format(self.stats['frac']['false negatives'][i])
@@ -123,6 +124,8 @@ class ConfusionViz:
             },
             'false positives': {
                 'fillcolor': 'red',
+                'fill': 'toself',
+                'line_width': 0,
                 'name': 'false positives: {} ({} of sample)'.format(
                     '{:,}'.format(self.stats['count']['false positives'][i]), 
                     '{:.2%}'.format(self.stats['frac']['false positives'][i])
@@ -130,13 +133,15 @@ class ConfusionViz:
             },
             'true positives': {
                 'fillcolor': 'green',
+                'fill': 'toself',
+                'line_width': 0,
                 'name': 'true positives: {} ({} of sample)'.format(
                     '{:,}'.format(self.stats['count']['true positives'][i]), 
                     '{:.2%}'.format(self.stats['frac']['true positives'][i])              
                 )
             },
             'predicted positives': {
-                'opacity': 0, 
+                'line_color': 'black',
                 'name': 'predicted positives: {} ({} of sample)'.format(
                     '{:,}'.format(self.stats['count']['predicted positives'][i]), 
                     '{:.2%}'.format(self.stats['frac']['predicted positives'][i])
@@ -226,17 +231,14 @@ class ConfusionViz:
             
     
 def find_closest(look_in, look_for):
-    '''
-    
-    '''
     """
-    Find elements of array 'look_in' that are as close as possible from each element of array 'look_for'.
+    Find elements of array 'look_in' that are as close as possible to the elements of array 'look_for'.
     Both 'look_in' and 'look_for' are assumed to be sorted in descending order.
-
+    
     Args:
         look_in: iterable
         look_for: iterable
-
+        
     Returns:
         i_found: list containing indexes of elements that are in 'look_in'
     """
@@ -246,7 +248,7 @@ def find_closest(look_in, look_for):
     midpoint_before = float('Inf')
 
     while i_for < len(look_for):  
-        midpoint_after = sum(look_in[i_in : i_in+2]) / 2 if i_in < len(look_in) - 1 else float('-Inf')
+        midpoint_after = sum(look_in[i_in : i_in + 2]) / 2 if i_in < len(look_in) - 1 else float('-Inf')
         if look_for[i_for] <= midpoint_after:
             i_in += 1
             midpoint_before = midpoint_after
