@@ -28,7 +28,8 @@ class ConfusionViz:
         precision = np.append(np.append(positives / sample, precision[:-1]), 0)
         recall = np.append(1, recall)
         threshold = np.append(np.append(0, threshold), 1.1)
-        select = np.round(np.linspace(0, len(threshold) - 1, min(max_frames, len(threshold)))).astype(int)
+        target_recall = np.append(np.append(1000, np.linspace(1 - 1 / max_frames, 1 / max_frames, max_frames - 2)), -1000)
+        select = find_closest(recall, target_recall)
         precision, recall, threshold = [arr[select] for arr in [precision, recall, threshold]]
         
         predicted_positives = np.array([np.sum(self.probas_pred >= thres) for thres in threshold])
@@ -222,3 +223,39 @@ class ConfusionViz:
         except:
             self._make_figure()
             self.Figure.write_html(filepath)
+            
+    
+def find_closest(look_in, look_for):
+    '''
+    
+    '''
+    """
+    Find elements of array 'look_in' that are as close as possible from each element of array 'look_for'.
+    Both 'look_in' and 'look_for' are assumed to be sorted in descending order.
+
+    Args:
+        look_in: iterable
+        look_for: iterable
+
+    Returns:
+        i_found: list containing indexes of elements that are in 'look_in'
+    """
+
+    i_found = []
+    i_in, i_for = 0, 0
+    midpoint_before = float('Inf')
+
+    while i_for < len(look_for):  
+        midpoint_after = sum(look_in[i_in : i_in+2]) / 2 if i_in < len(look_in) - 1 else float('-Inf')
+        if look_for[i_for] <= midpoint_after:
+            i_in += 1
+            midpoint_before = midpoint_after
+        elif look_for[i_for] > midpoint_before:
+            i_for += 1
+        else:
+            i_found += [i_in]
+            i_for += 1
+            i_in += 1
+            midpoint_before = midpoint_after 
+
+    return i_found
