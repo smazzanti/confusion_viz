@@ -3,7 +3,7 @@ from sklearn.metrics import precision_recall_curve
 import plotly.graph_objects as go
 from plotly.offline import init_notebook_mode
 
-from utils import find_closest
+from confusion_viz.utils import find_closest
 
 
 class ConfusionViz:
