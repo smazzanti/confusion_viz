@@ -144,7 +144,7 @@ class ConfusionViz:
                 )
             },
             'positives': {
-                'line_color': 'magenta', # "goldenrod", "magenta"
+                'line_color': 'magenta',
                 'line_width': .8,
                 'name': 'predicted positives: {} ({} of sample)'.format(
                     '{:,}'.format(self.stats['count']['positives']), 
