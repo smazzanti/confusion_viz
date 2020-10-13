@@ -191,6 +191,7 @@ class ConfusionViz:
             },
             'predicted positives': {
                 'line_color': 'black',
+                'line_width': .5,
                 'name': 'predicted positives: {} ({} of sample)'.format(
                     '{:,}'.format(self.stats['count']['predicted positives'][i]), 
                     '{:.2%}'.format(self.stats['frac']['predicted positives'][i])
