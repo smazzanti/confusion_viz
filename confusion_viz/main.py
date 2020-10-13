@@ -12,36 +12,15 @@ class ConfusionViz:
         pass
     
     
-    def fit(self, y_true, probas_pred, max_frames = 101):
-        """
-        Fit object on provided 'y_true' and 'probas pred'.
-
-        Args:
-            y_true: iterable, 0s and 1s representing positives and negatives.
-            probas_pred: iterable, estimated probabilities.
-            max_frames: int, number of points extracted from precision-recall curve. The points are extracted from approximately equidistant recall values. 
-                For instance, if 'max_frames' = 101, the points are taken such that recall is approximately [.0, .01, .02, ..., .99, 1.0]
-        """
-        
-        assert len(y_true) == len(probas_pred), 'Inconsistent length of arrays: {}, {}'.format(len(y_true), len(probas_pred))
-        assert set(y_true) - set([0, 1]) == set(), 'y_true values must be in {0, 1}'
-        
+    def fit(self, y_true, probas_pred, max_frames = 100):
+        assert len(y_true) == len(probas_pred), 'y_true and probas_pred must have same length'
+        assert set(y_true) == set([0, 1]), 'y_true values must be in {0, 1}'
         self.y_true = np.array(y_true)
         self.probas_pred = np.array(probas_pred)
         self.stats = self._get_stats(max_frames = max_frames)
         
         
     def _get_stats(self, max_frames):
-        """
-        Compute statistics for fitted 'y_true' and 'probas pred'.
-
-        Args:
-            max_frames: int, number of points extracted from precision-recall curve. The points are extracted from approximately equidistant recall values. 
-                For instance, if 'max_frames' = 101, the points are taken such that recall is approximately [.0, .01, .02, ..., .99, 1.0]
-
-        Returns:
-            stats: dict, statistics
-        """
         
         sample = len(self.y_true)
         positives = dict(zip(*np.unique(self.y_true, return_counts = True)))[1]
@@ -84,21 +63,13 @@ class ConfusionViz:
                 'true negatives': true_negatives / sample,
                 'false negatives': false_negatives / sample
             }
+
         }
         
         return stats
     
     
     def _index2coords(self, i):
-        """
-        Return coordinates of quantities to be plotted.
-
-        Args:
-            i: index of a point on the precision-recall curve.
-
-        Returns:
-            coords: dict, coordinates
-        """
                 
         coords = {}
         
@@ -106,6 +77,7 @@ class ConfusionViz:
         coords['false negatives'] = [1 - self.stats['frac']['positives'] ** .5, 1]
         coords['true positives'] = [coords['false negatives'][0], coords['false negatives'][0] + self.stats['frac']['true positives'][i] ** .5]
         coords['false positives'] = [coords['true positives'][1] - self.stats['frac']['predicted positives'][i] ** .5, coords['true positives'][1]]
+        coords['positives'] = coords['false negatives']
         coords['predicted positives'] = [coords['false positives'][0], coords['true positives'][1]]
         coords['precision'] = [.5] * 2
         coords['uplift'] = [.5] * 2
@@ -120,33 +92,15 @@ class ConfusionViz:
     
     
     def _coord2Scatter(self, coord, **Scatter_kwargs):
-        """
-        Return plotly shape from its coordinates.
-
-        Args:
-            coord: list, coordinates of shape.
-
-        Returns:
-            Scatter: plotly.graph_objects.Scatter: a plotly shape.
-        """
+        '''return a square given its coordinates'''
             
         x = [coord[i] for i in range(len(coord)) for _ in (0, 1)] + [coord[0]]
         y = x[::-1]
-        Scatter = go.Scatter(x = x, y = y, mode = 'lines', **Scatter_kwargs)
-        
-        return Scatter
+            
+        return go.Scatter(x = x, y = y, mode = 'lines', **Scatter_kwargs)
     
     
     def _index2Scatters(self, i):
-        """
-        Return dictionary of plotly shapes.
-
-        Args:
-            i: index of a point on the precision-recall curve.
-
-        Returns:
-            Scatters: dict, dictionary of plotly shapes.
-        """
         
         Scatters = {}
         
@@ -189,9 +143,17 @@ class ConfusionViz:
                     '{:.2%}'.format(self.stats['frac']['true positives'][i])              
                 )
             },
+            'positives': {
+                'line_color': 'magenta', # "goldenrod", "magenta"
+                'line_width': .8,
+                'name': 'predicted positives: {} ({} of sample)'.format(
+                    '{:,}'.format(self.stats['count']['positives']), 
+                    '{:.2%}'.format(self.stats['frac']['positives'])
+                )
+            },
             'predicted positives': {
                 'line_color': 'black',
-                'line_width': .5,
+                'line_width': .8,
                 'name': 'predicted positives: {} ({} of sample)'.format(
                     '{:,}'.format(self.stats['count']['predicted positives'][i]), 
                     '{:.2%}'.format(self.stats['frac']['predicted positives'][i])
@@ -218,7 +180,8 @@ class ConfusionViz:
             'true negatives', 
             'false negatives', 
             'false positives', 
-            'true positives', 
+            'true positives',
+            'positives',
             'predicted positives', 
             'precision', 
             'uplift', 
@@ -229,9 +192,6 @@ class ConfusionViz:
 
 
     def _make_figure(self):
-        """
-        Make plotly figure.
-        """
         
         frames, Scatters = [], []
         
@@ -262,9 +222,6 @@ class ConfusionViz:
         
         
     def show(self):
-        """
-        Show figure in notebook mode.
-        """
         
         init_notebook_mode()
         
@@ -277,9 +234,6 @@ class ConfusionViz:
         
         
     def to_html(self, filepath):
-        """
-        Save figure in html format.
-        """
         
         try:
             self.Figure.write_html(filepath)
