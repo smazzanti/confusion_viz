@@ -15,7 +15,7 @@ class ConfusionViz:
     
     def fit(self, y_true, probas_pred, max_frames = 100):
         assert len(y_true) == len(probas_pred), 'y_true and probas_pred must have same length'
-        assert set(y_true) - set([0, 1]) == set(), 'y_true values must be in {0, 1}'
+        assert set(y_true) == set([0, 1]), 'must be set(y_true) = {0, 1}'
         self.y_true = np.array(y_true)
         self.probas_pred = np.array(probas_pred)
         self.stats = self._get_stats(max_frames = max_frames)
