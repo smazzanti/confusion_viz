@@ -15,7 +15,6 @@ Interactive visualization of the output of any binary classifier.
 ## How to use
 
 The package consists of one class called **ConfusionViz**.
-The object needs to be fitted on y_true and probas_pred.
 
 <pre>
 from confusion_viz import ConfusionViz
