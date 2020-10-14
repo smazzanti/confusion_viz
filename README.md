@@ -1,12 +1,8 @@
 # confusion_viz
 
-## Install
-
-Shap can be installed from either [PyPI](https://pypi.org/project/shap) or [conda-forge](https://anaconda.org/conda-forge/shap):
+confusion_viz can be installed in your local environment via:
 
 <pre>
-pip install shap
-<i>or</i>
-conda install -c conda-forge shap
+!pip install git+https://github.com/smazzanti/confusion_viz
 </pre>
 
