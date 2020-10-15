@@ -4,6 +4,10 @@ Interactive visualization of the output of any binary classifier.
 
 ![](confusion_viz.gif)
 
+## Reference
+
+[Towards Data Science: Interactive visualization of the output of any binary classifier - in 5 Lines of Python](https://towardsdatascience.com/interactive-visualization-of-binary-classification-in-5-lines-of-python-9c1f627ded8)
+
 ## How to install
 
 **confusion_viz** can be installed in your local environment via:
@@ -15,6 +19,7 @@ Interactive visualization of the output of any binary classifier.
 ## How to use
 
 The package consists of one class called **ConfusionViz**.
+Here is a snippet containing basically everything you need to know:
 
 <pre>
 from confusion_viz import ConfusionViz
